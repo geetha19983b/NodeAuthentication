@@ -3,13 +3,11 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const ejs = require("ejs");
 const mongoose = require('mongoose');
-//const encrypt =require("mongoose-encryption");
+const encrypt =require("mongoose-encryption");
 const app = express();
-//const md5 = require('md5');
+
 //access the key present in .env file
 //console.log(process.env.API_KEY);
-const bcrypt = require('bcrypt');
-const saltRounds = 10;
 app.set('view engine', 'ejs');
 
 app.use(bodyParser.urlencoded({
@@ -30,8 +28,8 @@ const userSchema = new mongoose.Schema({
 //console.log(sec);
 
 //const secret = "Thisisourlittlesecret.";
-//const secret =process.env.SECRET;
-//userSchema.plugin(encrypt, { secret: secret, encryptedFields: ["password"] });
+const secret =process.env.SECRET;
+userSchema.plugin(encrypt, { secret: secret, encryptedFields: ["password"] });
 
 const User = new mongoose.model("User",userSchema);
 
@@ -45,22 +43,19 @@ app.get("/register",function(req,res){
   res.render("register");
 });
 app.post("/register",function(req,res){
-  bcrypt.hash(req.body.password, saltRounds, function(err, hash) {
-    const newUser=new User({
-      email:req.body.username,
-      password:hash
-    });
-    newUser.save(function(err){
-      if(err){
-        console.log(err);
-      } else
-      {
-        res.render("secrets");
-      }
+  const newUser=new User({
+    email:req.body.username,
+    password:req.body.password
+  });
+  newUser.save(function(err){
+    if(err){
+      console.log(err);
+    } else
+    {
+      res.render("secrets");
+    }
 
-    });
-});
-
+  });
 });
 app.post("/login",function(req,res){
   const username = req.body.username;
@@ -71,13 +66,11 @@ app.post("/login",function(req,res){
       console.log(err);
     } else {
       if(foundUser){
-        bcrypt.compare(password , foundUser.password, function(err, result) {
-           if(result === true)
-           {
-             res.render("secrets");
-           }
-        });
-
+        console.log(foundUser.password);
+        console.log(password);
+        if(foundUser.password === password){
+         res.render("secrets");
+        }
       }
     }
   });
